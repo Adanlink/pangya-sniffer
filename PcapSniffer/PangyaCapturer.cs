@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text;
 using PacketDotNet;
 using SharpPcap;
 using SharpPcap.LibPcap;
@@ -38,7 +39,8 @@ public sealed class PangyaCapturer : IDisposable
         if (!_device.Opened)
         {
             _device.Open();
-            _device.Filter = "net 203.107.140.0/24 and tcp portrange 10000-45000";
+            //_device.Filter = "net 203.107.140.0/24 and tcp portrange 10000-45000";
+            _device.Filter = "tcp portrange 10000-45000";
         }
         _device.StartCapture();
     }
@@ -123,14 +125,20 @@ public sealed class PangyaCapturer : IDisposable
         byte cryptographyKey;
         
         int packetId = (payloadData[1] << 8) | payloadData[0];
-        //Console.WriteLine($"Registering connection! Id: '0x{packetId:X}'");
+        /*StringBuilder text = new();
+        foreach (byte subByte in payloadData)
+        {
+            text.Append($"0x{subByte:x2}, ");
+        }
+        
+        Console.WriteLine($"Registering connection! Id: '0x{packetId:X}' Packet: '{text}'");*/
         switch (packetId)
         {
             case 0xb00:
                 serviceType = ServiceType.LoginServer;
                 cryptographyKey = payloadData[6];
                 break;
-            case 0x1500:
+            case 0x1500 or 0x600:
                 serviceType = ServiceType.GameServer;
                 cryptographyKey = payloadData[8];
                 break;
